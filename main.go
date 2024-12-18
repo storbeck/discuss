@@ -143,7 +143,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case responseMsg:
 		m.loading = false
-		m.messages = append(m.messages, Message{Role: "assistant", Content: string(msg)})
+		response := msg
+		if response.error != nil {
+			m.messages = append(m.messages, Message{
+				Role:    "system",
+				Content: fmt.Sprintf("Error: %v", response.error),
+			})
+		} else {
+			m.messages = append(m.messages, Message{
+				Role:    "assistant",
+				Content: response.content,
+			})
+		}
 		m.viewport.SetContent(formatMessages(m.messages))
 		m.viewport.GotoBottom()
 		return m, nil
@@ -207,17 +218,22 @@ func formatMessages(messages []Message) string {
 }
 
 // Custom message types for tea.Msg
-type responseMsg string
+type responseMsg struct {
+	content string
+	error   error
+}
 
 func sendMessage(messages []Message) tea.Cmd {
 	return func() tea.Msg {
-		return responseMsg(sendPromptWithHistory(messages))
+		content, err := sendPromptWithHistory(messages)
+		return responseMsg{content: content, error: err}
 	}
 }
 
 func sendInitialMessage(messages []Message) tea.Cmd {
 	return func() tea.Msg {
-		return responseMsg(sendPromptWithHistory(messages))
+		content, err := sendPromptWithHistory(messages)
+		return responseMsg{content: content, error: err}
 	}
 }
 
@@ -256,8 +272,8 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-func sendPromptWithHistory(messages []Message) string {
-	url := "http://localhost:11434/api/generate"
+func sendPromptWithHistory(messages []Message) (string, error) {
+	url := "http://192.168.1.213:11434/api/generate"
 	var responseText bytes.Buffer
 
 	// Modified context to be more general-purpose
@@ -276,15 +292,13 @@ func sendPromptWithHistory(messages []Message) string {
 	// Marshal payload to JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
-		return ""
+		return "", fmt.Errorf("error marshalling JSON: %w", err)
 	}
 
 	// Send the POST request
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return ""
+		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -311,11 +325,10 @@ func sendPromptWithHistory(messages []Message) string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading response stream:", err)
-		return ""
+		return "", fmt.Errorf("error reading response stream: %w", err)
 	}
 
-	return responseText.String()
+	return responseText.String(), nil
 }
 
 // readFromStdin reads all input piped into stdin and returns it as a string
