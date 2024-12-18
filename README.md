@@ -2,6 +2,12 @@
 
 A command-line tool that enables interactive discussions about code or text content using AI assistance.
 
+
+https://github.com/user-attachments/assets/df0e0a5b-ba3f-4652-8c49-d609d43d6afd
+
+
+
+
 ## Features
 
 - Interactive TUI (Terminal User Interface) powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea)
