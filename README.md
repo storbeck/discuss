@@ -1,20 +1,14 @@
 # Discuss - Interactive Content Analysis Tool
 
-A command-line tool that enables interactive discussions about code or text content using AI assistance.
-
-
-https://github.com/user-attachments/assets/df0e0a5b-ba3f-4652-8c49-d609d43d6afd
-
-
-
+A command-line tool that enables AI-assisted analysis and discussion of any text content, code, or direct questions.
 
 ## Features
 
-- Interactive TUI (Terminal User Interface) powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea)
-- Real-time AI responses using local LLM server (Ollama)
-- Support for scrolling through conversation history
-- Stylish interface with distinct user and bot messages
-- Mouse wheel support for navigation
+- Interactive chat mode for ongoing discussions
+- Single prompt mode for quick analysis
+- Flexible input handling (files, clipboard, or direct questions)
+- Clean, readable terminal output with timestamps
+- Local LLM integration via Ollama
 
 ## Prerequisites
 
@@ -25,53 +19,73 @@ https://github.com/user-attachments/assets/df0e0a5b-ba3f-4652-8c49-d609d43d6afd
 ## Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/storbeck/discuss
 cd discuss
-
-# Build and install
 make
 sudo make install
 ```
 
-The installation will:
-- Build the binary
-- Install it to `/usr/local/bin/discuss`
-
-To uninstall:
-```bash
-make uninstall
-```
-
 ## Usage
 
-The tool reads input from stdin, making it perfect for analyzing files:
+### Interactive Mode (-it)
 
+Start an interactive chat session:
 ```bash
-cat file.txt | discuss
+discuss -it
 ```
 
-### Controls
-
-- Type your message and press `Enter` to send
-- Use mouse wheel or trackpad to scroll through conversation history
-- Press `Ctrl+C` or `Esc` to quit
-- Up to 280 characters per message
-
-## Building from Source
-
+Analyze a file interactively:
 ```bash
-# Build only
-make build
+cat main.go | discuss -it
+```
 
-# Clean build artifacts
-make clean
+### Single Prompt Mode (-p)
 
-# Build and install
-make install
+Quick analysis without entering chat mode:
+```bash
+# Analyze a file with a specific question
+cat main.go | discuss -p "What could be improved in this code?"
 
-# Uninstall
-make uninstall
+# Direct questions without file input
+discuss -p "What's the best way to handle errors in Go?"
+
+# Pipe in git diff for review
+git diff | discuss -p "Review these changes and suggest improvements"
+```
+
+## Examples
+
+1. Code Review:
+```bash
+git show | discuss -p "Review this commit and suggest improvements"
+```
+
+2. Log Analysis:
+```bash
+tail -n 100 error.log | discuss -it
+```
+
+3. Documentation Help:
+```bash
+discuss -p "How do I write a good README.md file?"
+```
+
+## Configuration
+
+### Environment Variables
+
+- `OLLAMA_HOST`: URL of your Ollama instance (default: `http://localhost:11434`)
+
+You can set environment variables in two ways:
+
+1. Set in your shell:
+```bash
+export OLLAMA_HOST=http://192.168.1.213:11434
+```
+
+2. Set when running the command:
+```bash
+OLLAMA_HOST=http://192.168.1.213:11434 discuss -it
 ```
 
 ## License
